@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BiInk | Painel do delivery</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --tinta:#14213D; --papel:#F3F5F7; --cartao:#FFFFFF; --linha:#D9DEE4;
+    --prazo:#1B998B; --atraso:#E4572E; --neutro:#9AA5B1; --alerta:#F2A541; --texto:#26303F; --suave:#5C6877;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --papel:#0E1624; --cartao:#16213A; --linha:#2A3754; --texto:#E6EBF2; --suave:#9AA7BA; --tinta:#E6EBF2; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--papel); color:var(--texto);
+         font-family:"Segoe UI", system-ui, -apple-system, Roboto, sans-serif; line-height:1.5; }
+  header { background:#14213D; color:#fff; padding:28px 24px 24px; }
+  header h1 { margin:0 0 4px; font-size:1.7rem; letter-spacing:-.01em; }
+  header p { margin:0; color:#B8C2D3; max-width:70ch; }
+  main { max-width:1080px; margin:0 auto; padding:24px 16px 56px; display:grid; gap:24px; }
+  section { background:var(--cartao); border:1px solid var(--linha); border-radius:10px; padding:22px; }
+  section h2 { margin:0 0 4px; font-size:1.2rem; }
+  .problemas { margin:0 0 14px; color:var(--suave); font-size:.92rem; }
+  .grafico { position:relative; height:360px; }
+  .leitura { margin:16px 0 0; padding:12px 14px; border-left:4px solid var(--atraso);
+             background:color-mix(in srgb, var(--atraso) 8%, transparent); max-width:80ch; }
+  .nota { margin:10px 0 0; color:var(--suave); font-size:.86rem; max-width:90ch; }
+  footer { max-width:1080px; margin:0 auto; padding:0 16px 40px; color:var(--suave); font-size:.85rem; }
+  @media (max-width:640px) { .grafico { height:300px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>BiInk | Painel do delivery</h1>
+  <p>Jan/26 a Jun/26, calculado a partir das planilhas de faturamento, entrega e preparo. Atualizado em 22/10/2026 20:22:33.</p>
+</header>
+<main>
+  <section>
+    <h2>Operação e entregas</h2>
+    <p class="problemas">Problema 1: atraso nas entregas. Problema 2: falta de motoboys.</p>
+    <div class="grafico"><canvas id="g1" role="img" aria-label="Barras agrupadas de pedidos recebidos, no prazo e atrasados por mês"></canvas></div>
+    <p class="leitura">Em média, 45% dos pedidos entregues chegam atrasados, mês após mês. Nos dados diários, a adoção do módulo de motoboy quase não se relaciona com a taxa de atraso (correlação -0.09), então esta amostra não mostra que a falta de entregadores explique os atrasos.</p>
+    <p class="nota">As planilhas não trazem o número de motoboys. A linha mostra a adoção do módulo de motoboy no sistema, usada como indicador no lugar da quantidade de entregadores.</p>
+  </section>
+  <section>
+    <h2>Produção e desperdício</h2>
+    <p class="problemas">Problema 3: desperdício de alimentos. Problema 4: falta de controle dos recursos.</p>
+    <div class="grafico"><canvas id="g2" role="img" aria-label="Linhas mensais de kg descartados, custo estimado e pedidos recebidos"></canvas></div>
+    <p class="leitura">Foram 2577 kg descartados no período, com pico em Mai/26. De Jan/26 a Jun/26 a variação foi de -5%. O uso da previsão de demanda ficou em 0% em todo o período.</p>
+    <p class="nota">Não há planilha de produção nem de custo. Os pedidos recebidos representam a produção, e o custo é o peso descartado multiplicado por R$ 12,00 por kg (premissa editável no script).</p>
+  </section>
+  <section>
+    <h2>Gestão e desempenho</h2>
+    <p class="problemas">Problema 5: falta de informação para decidir. Problema 6: dificuldade no controle dos resultados.</p>
+    <div class="grafico"><canvas id="g3" role="img" aria-label="Pareto do impacto financeiro estimado por problema"></canvas></div>
+    <p class="leitura">Cancelamentos e reembolsos lidera, com 58% do impacto estimado (R$ 76.212 de R$ 130.880). A precisão do status do pedido ficou em 53% e a previsão de demanda não foi usada, o que mostra a falta de informação para decidir.</p>
+    <p class="nota">Cancelamentos e reembolsos vêm direto da planilha. Atrasos (R$ 8,00 por pedido) e desperdício usam as premissas de custo do script, então os valores são estimativas.</p>
+  </section>
+</main>
+<footer>Gerado por painel_biink.py</footer>
+<script>
+const D = {"g1": {"meses": ["Jan/26", "Fev/26", "Mar/26", "Abr/26", "Mai/26", "Jun/26"], "recebidos": [1358, 1198, 1386, 1423, 1428, 1365], "no_prazo": [610, 526, 594, 630, 617, 594], "atrasados": [487, 447, 508, 513, 512, 501], "adocao_motoboy": [26.6, 22.7, 24.7, 24.5, 22.3, 23.6], "pct_atraso_total": 45.4, "correlacao": -0.09}, "g2": {"meses": ["Jan/26", "Fev/26", "Mar/26", "Abr/26", "Mai/26", "Jun/26"], "kg": [436.0, 396.1, 434.0, 445.2, 452.2, 413.5], "custo": [5232.6, 4753.68, 5208.12, 5341.8, 5426.28, 4961.64], "pedidos": [1358, 1198, 1386, 1423, 1428, 1365], "kg_por_100": [32.1, 33.1, 31.3, 31.3, 31.7, 30.3], "kg_total": 2577.0, "uso_previsao": 0.0}, "g3": {"fatores": ["Cancelamentos e reembolsos", "Desperdício de alimentos", "Atrasos nas entregas"], "valores": [76212.37, 30924.12, 23744.0], "acumulado": [58.2, 81.9, 100.0], "total": 130880.49, "faturamento": 362139.75, "precisao_status": 53.2, "uso_previsao": 0.0}};
+const css = getComputedStyle(document.documentElement);
+const cor = n => css.getPropertyValue(n).trim();
+Chart.defaults.font.family = '"Segoe UI", system-ui, sans-serif';
+Chart.defaults.color = cor('--suave');
+Chart.defaults.borderColor = cor('--linha');
+const base = { responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false},
+               plugins:{ legend:{position:'bottom'} } };
+const fmt = v => v.toLocaleString('pt-BR');
+
+new Chart(document.getElementById('g1'), {
+  data: { labels: D.g1.meses, datasets: [
+    { type:'bar', label:'Pedidos recebidos', data:D.g1.recebidos, backgroundColor:cor('--neutro') },
+    { type:'bar', label:'Entregues no prazo', data:D.g1.no_prazo, backgroundColor:cor('--prazo') },
+    { type:'bar', label:'Pedidos atrasados', data:D.g1.atrasados, backgroundColor:cor('--atraso') },
+    { type:'line', label:'Adoção do módulo de motoboy (%)', data:D.g1.adocao_motoboy, yAxisID:'y1',
+      borderColor:cor('--tinta'), backgroundColor:cor('--tinta'), tension:.25, pointRadius:4 }
+  ]},
+  options: { ...base, scales:{
+    y:{ beginAtZero:true, title:{display:true, text:'Pedidos no mês'} },
+    y1:{ position:'right', min:0, max:60, grid:{drawOnChartArea:false}, title:{display:true, text:'Adoção (%)'} } } }
+});
+
+new Chart(document.getElementById('g2'), {
+  type:'line',
+  data: { labels: D.g2.meses, datasets: [
+    { label:'Alimentos descartados (kg)', data:D.g2.kg, borderColor:cor('--atraso'), backgroundColor:cor('--atraso'), tension:.25, pointRadius:4 },
+    { label:'Pedidos recebidos (produção)', data:D.g2.pedidos, borderColor:cor('--neutro'), backgroundColor:cor('--neutro'), tension:.25, pointRadius:4 },
+    { label:'Custo do desperdício (R$, estimado)', data:D.g2.custo, yAxisID:'y1', borderColor:cor('--alerta'),
+      backgroundColor:cor('--alerta'), borderDash:[6,4], tension:.25, pointRadius:4 }
+  ]},
+  options: { ...base, scales:{
+    y:{ beginAtZero:true, title:{display:true, text:'kg / pedidos'} },
+    y1:{ position:'right', beginAtZero:true, grid:{drawOnChartArea:false}, title:{display:true, text:'R$ (estimado)'} } } }
+});
+
+new Chart(document.getElementById('g3'), {
+  data: { labels: D.g3.fatores, datasets: [
+    { type:'bar', label:'Impacto estimado (R$)', data:D.g3.valores,
+      backgroundColor: D.g3.valores.map((_, i) => i === 0 ? cor('--atraso') : cor('--neutro')) },
+    { type:'line', label:'% acumulado', data:D.g3.acumulado, yAxisID:'y1',
+      borderColor:cor('--tinta'), backgroundColor:cor('--tinta'), pointRadius:5, tension:0 }
+  ]},
+  options: { ...base, scales:{
+    y:{ beginAtZero:true, title:{display:true, text:'Impacto estimado (R$)'} },
+    y1:{ position:'right', min:0, max:100, grid:{drawOnChartArea:false}, title:{display:true, text:'% acumulado'} } },
+    plugins:{ legend:{position:'bottom'},
+      tooltip:{ callbacks:{ label:c => c.dataset.yAxisID === 'y1' ? c.parsed.y + '%' : 'R$ ' + fmt(c.parsed.y) } } } }
+});
+</script>
+</body>
+</html>
